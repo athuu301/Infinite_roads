@@ -30,15 +30,16 @@ export class Environment {
         this.sunLight.position.set(100, 150, 80);
         this.sunLight.castShadow = true;
 
-        this.sunLight.shadow.mapSize.width = 2048;
-        this.sunLight.shadow.mapSize.height = 2048;
+        this.sunLight.shadow.mapSize.width = 1024;
+        this.sunLight.shadow.mapSize.height = 1024;
         this.sunLight.shadow.camera.near = 0.5;
-        this.sunLight.shadow.camera.far = 400;
-        const d = 100;
+        this.sunLight.shadow.camera.far = 300;
+        const d = 70;
         this.sunLight.shadow.camera.left = -d;
         this.sunLight.shadow.camera.right = d;
         this.sunLight.shadow.camera.top = d;
         this.sunLight.shadow.camera.bottom = -d;
+        this.sunLight.shadow.bias = -0.0005;
 
         this.scene.add(this.sunLight);
 

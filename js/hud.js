@@ -7,6 +7,7 @@
 export class HUDManager {
     constructor() {
         // Stats elements
+        this.fpsEl = document.getElementById('stat-fps');
         this.distanceEl = document.getElementById('stat-distance');
         this.nodesEl = document.getElementById('stat-nodes');
         this.maxSpeedEl = document.getElementById('stat-maxspeed');
@@ -36,6 +37,18 @@ export class HUDManager {
         this.toastMsgEl = document.getElementById('toast-message');
 
         this.topSpeedEver = 0;
+    }
+
+    updateFPS(fps) {
+        if (!this.fpsEl) return;
+        this.fpsEl.textContent = fps;
+        if (fps >= 55) {
+            this.fpsEl.className = 'stat-value fps-green';
+        } else if (fps >= 30) {
+            this.fpsEl.className = 'stat-value fps-yellow';
+        } else {
+            this.fpsEl.className = 'stat-value fps-red';
+        }
     }
 
     updateKeyIndicators(keys) {
@@ -137,16 +150,17 @@ export class HUDManager {
         ctx.moveTo(0, centerY); ctx.lineTo(width, centerY);
         ctx.stroke();
 
-        // Draw Generated Road Trail
+        // Draw Generated Road Trail (only last 150 nodes for performance)
         if (roadNodes.length > 1) {
+            const visibleNodes = roadNodes.length > 150 ? roadNodes.slice(-150) : roadNodes;
             ctx.strokeStyle = '#00f3ff';
             ctx.lineWidth = 4;
             ctx.shadowColor = '#00f3ff';
             ctx.shadowBlur = 6;
             ctx.beginPath();
 
-            for (let i = 0; i < roadNodes.length; i++) {
-                const node = roadNodes[i];
+            for (let i = 0; i < visibleNodes.length; i++) {
+                const node = visibleNodes[i];
                 // Transform node world position relative to car position
                 const relX = (node.pos.x - carPos.x) * scale;
                 const relZ = (node.pos.z - carPos.z) * scale;

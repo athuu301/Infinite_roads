@@ -18,11 +18,11 @@ class GameApp {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1200);
         
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.0;
         this.container.appendChild(this.renderer.domElement);
@@ -44,6 +44,11 @@ class GameApp {
         this.initSparkParticles();
 
         this.lastTime = performance.now();
+
+        // FPS Counter State
+        this.frameCount = 0;
+        this.fpsLastTime = performance.now();
+        this.currentFPS = 60;
 
         this.bindEvents();
         this.setupUIListeners();
@@ -280,6 +285,15 @@ class GameApp {
         const now = performance.now();
         const deltaTime = Math.min((now - this.lastTime) / 1000, 0.1);
         this.lastTime = now;
+
+        // Calculate real-time FPS
+        this.frameCount++;
+        if (now - this.fpsLastTime >= 250) {
+            this.currentFPS = Math.round((this.frameCount * 1000) / (now - this.fpsLastTime));
+            this.hud.updateFPS(this.currentFPS);
+            this.frameCount = 0;
+            this.fpsLastTime = now;
+        }
 
         // 1. Update Vehicle Physics
         const carStatus = this.car.update(this.keys, deltaTime);

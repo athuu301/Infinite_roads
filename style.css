@@ -137,6 +137,21 @@ header, .controls-overlay, .dashboard-panel, .minimap-container, .modal {
     color: rgba(255, 255, 255, 0.7);
 }
 
+.fps-green {
+    color: var(--accent-green) !important;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+}
+
+.fps-yellow {
+    color: var(--accent-gold) !important;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+}
+
+.fps-red {
+    color: var(--accent-magenta) !important;
+    text-shadow: 0 0 10px rgba(255, 2, 102, 0.4);
+}
+
 .header-actions {
     display: flex;
     align-items: center;

@@ -26,7 +26,20 @@ export class RoadGenerator {
         this.spawnGuardrails = true;
 
         this.initTexturesAndMaterials();
+        this.initSharedGeometries();
         this.initRoadMesh();
+    }
+
+    initSharedGeometries() {
+        this.sharedPoleGeo = new THREE.CylinderGeometry(0.08, 0.12, 3.5, 8);
+        this.sharedPoleMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.8, roughness: 0.2 });
+        
+        this.sharedArmGeo = new THREE.BoxGeometry(0.1, 0.1, 1.2);
+        this.sharedBulbGeo = new THREE.SphereGeometry(0.15, 8, 8);
+        this.sharedBulbMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
+
+        this.sharedGuardPostGeo = new THREE.BoxGeometry(0.12, 0.5, 0.12);
+        this.sharedGuardPostMat = new THREE.MeshStandardMaterial({ color: 0x8899a6, metalness: 0.8 });
     }
 
     initTexturesAndMaterials() {
@@ -178,7 +191,9 @@ export class RoadGenerator {
     }
 
     update(carPosition, carHeading) {
-        // Determine if car has moved far enough to create a new road node segment
+        // Prune distant decorations & keep active node buffer efficient
+        this.pruneDistantProps(carPosition);
+
         const currentPos = new THREE.Vector3(carPosition.x, 0.04, carPosition.z);
 
         if (this.nodes.length === 0) {
@@ -198,6 +213,22 @@ export class RoadGenerator {
         }
 
         return false;
+    }
+
+    pruneDistantProps(carPos) {
+        // 1. Cull old decorations far behind or far away (> 250m)
+        for (let i = this.decorationsGroup.children.length - 1; i >= 0; i--) {
+            const child = this.decorationsGroup.children[i];
+            if (child.position.distanceTo(carPos) > 250) {
+                this.decorationsGroup.remove(child);
+            }
+        }
+
+        // 2. Keep active nodes bounded (max 300 nodes) to maintain high performance geometry building
+        const maxActiveNodes = 300;
+        if (this.nodes.length > maxActiveNodes) {
+            this.nodes.splice(0, this.nodes.length - maxActiveNodes);
+        }
     }
 
     addNode(pos, heading) {
@@ -260,7 +291,7 @@ export class RoadGenerator {
             positions[(vIdx + 1) * 3 + 1] = 0.04;
             positions[(vIdx + 1) * 3 + 2] = rightZ;
 
-            // UV Coordinates (U = 0 for Left edge, U = 1 for Right edge; V = Distance along road)
+            // UV Coordinates
             const vCoord = acumulDist / 8.0; // Texture tiling frequency
             uvs[vIdx * 2] = 0;
             uvs[vIdx * 2 + 1] = vCoord;
@@ -309,7 +340,7 @@ export class RoadGenerator {
 
         // 1. Streetlights every 8 nodes (~16-20 meters)
         if (this.spawnStreetlights && nodeIndex % 8 === 0) {
-            const sideMultiplier = (nodeIndex / 8) % 2 === 0 ? 1 : -1; // Alternate left/right
+            const sideMultiplier = (nodeIndex / 8) % 2 === 0 ? 1 : -1;
             const posX = node.pos.x + perpX * sideOffset * sideMultiplier;
             const posZ = node.pos.z + perpZ * sideOffset * sideMultiplier;
 
@@ -323,17 +354,14 @@ export class RoadGenerator {
             const poleLeftX = node.pos.x - perpX * (node.width / 2 + 0.3);
             const poleLeftZ = node.pos.z - perpZ * (node.width / 2 + 0.3);
 
-            const postLeft = new THREE.Mesh(
-                new THREE.BoxGeometry(0.12, 0.5, 0.12),
-                new THREE.MeshStandardMaterial({ color: 0x8899a6, metalness: 0.8 })
-            );
+            const postLeft = new THREE.Mesh(this.sharedGuardPostGeo, this.sharedGuardPostMat);
             postLeft.position.set(poleLeftX, 0.25, poleLeftZ);
             this.decorationsGroup.add(postLeft);
 
             const poleRightX = node.pos.x + perpX * (node.width / 2 + 0.3);
             const poleRightZ = node.pos.z + perpZ * (node.width / 2 + 0.3);
 
-            const postRight = postLeft.clone();
+            const postRight = new THREE.Mesh(this.sharedGuardPostGeo, this.sharedGuardPostMat);
             postRight.position.set(poleRightX, 0.25, poleRightZ);
             this.decorationsGroup.add(postRight);
         }
@@ -342,28 +370,20 @@ export class RoadGenerator {
     createStreetlightMesh(heading, sideMultiplier) {
         const group = new THREE.Group();
 
-        const poleMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.8, roughness: 0.2 });
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 3.5, 8), poleMat);
+        const pole = new THREE.Mesh(this.sharedPoleGeo, this.sharedPoleMat);
         pole.position.y = 1.75;
         group.add(pole);
 
         // Overhanging lamp arm
-        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 1.2), poleMat);
+        const arm = new THREE.Mesh(this.sharedArmGeo, this.sharedPoleMat);
         arm.position.set(0, 3.4, 0.4 * sideMultiplier);
         arm.rotation.y = heading + (Math.PI / 2) * sideMultiplier;
         group.add(arm);
 
-        // Warm LED Light fixture
-        const bulbGeo = new THREE.SphereGeometry(0.15, 8, 8);
-        const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
-        const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+        // Warm LED Light fixture (glowing mesh, no heavy per-pole PointLight)
+        const bulb = new THREE.Mesh(this.sharedBulbGeo, this.sharedBulbMat);
         bulb.position.set(0, 3.3, 0.8 * sideMultiplier);
         group.add(bulb);
-
-        // Pointlight illuminating the road segment
-        const pLight = new THREE.PointLight(0xffea00, 2.5, 12);
-        pLight.position.set(0, 3.2, 0.8 * sideMultiplier);
-        group.add(pLight);
 
         return group;
     }
