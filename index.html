@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VelocityCraft 3D - Infinite Road Builder & Supercar Simulator</title>
+    <meta name="description" content="An open world 3D car driving game where a real-time procedural road builds wherever you drive. Powered by Three.js.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+</head>
+<body>
+    <!-- Game Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- HUD Overlay -->
+    <div id="hud">
+        <!-- Top Header Bar -->
+        <header class="hud-header">
+            <div class="brand">
+                <div class="logo-icon">🏎️</div>
+                <div class="logo-text">
+                    <h1>ROAD<span class="highlight">CRAFT</span> 3D</h1>
+                    <span class="subtitle">INFINITE HIGHWAY GENERATOR</span>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <span class="stat-label">ROAD CREATED</span>
+                    <span class="stat-value" id="stat-distance">0.0 <small>KM</small></span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">ROAD NODES</span>
+                    <span class="stat-value" id="stat-nodes">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">TOP SPEED</span>
+                    <span class="stat-value" id="stat-maxspeed">0 <small>KM/H</small></span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button id="btn-theme" class="icon-btn" title="Toggle Day/Night/Cyber Theme">🌙</button>
+                <button id="btn-audio" class="icon-btn" title="Toggle Engine Audio & Synth Radio">🔊</button>
+                <button id="btn-clear-road" class="btn btn-secondary">Clear Road</button>
+                <button id="btn-settings" class="icon-btn">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Live Controls Visualizer (Left Floating) -->
+        <div class="controls-overlay">
+            <div class="controls-title">DRIVER CONTROLS</div>
+            
+            <div class="key-cluster steering-cluster">
+                <div class="key-row">
+                    <div id="key-w" class="key-cap" data-key="W">W</div>
+                </div>
+                <div class="key-row">
+                    <div id="key-a" class="key-cap" data-key="A">A</div>
+                    <div id="key-s" class="key-cap" data-key="S">S</div>
+                    <div id="key-d" class="key-cap" data-key="D">D</div>
+                </div>
+                <span class="key-label">STEER / DIRECTION</span>
+            </div>
+
+            <div class="key-cluster throttle-cluster">
+                <div id="key-c" class="key-cap key-wide key-accel" data-key="C">
+                    <span class="key-name">C</span>
+                    <span class="key-action">ACCELERATE</span>
+                </div>
+                <div id="key-z" class="key-cap key-wide key-brake" data-key="Z">
+                    <span class="key-name">Z</span>
+                    <span class="key-action">BRAKE / REV</span>
+                </div>
+            </div>
+
+            <div class="key-hint">
+                <span>Space: Handbrake</span>
+                <span>R: Respawn Car</span>
+                <span>V: Camera View</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Gauges (Bottom Center/Right) -->
+        <div class="dashboard-panel">
+            <!-- Speedometer -->
+            <div class="speedometer-container">
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                    <circle class="gauge-bg" cx="100" cy="100" r="80"></circle>
+                    <circle id="gauge-fill" class="gauge-fill" cx="100" cy="100" r="80"></circle>
+                </svg>
+                <div class="speed-readout">
+                    <span id="speed-value">0</span>
+                    <span class="speed-unit">KM/H</span>
+                    <div id="gear-indicator" class="gear-badge">N</div>
+                </div>
+            </div>
+
+            <!-- Tachometer / RPM Bar -->
+            <div class="rpm-container">
+                <div class="rpm-label">RPM <span>x1000</span></div>
+                <div class="rpm-bar-wrapper">
+                    <div id="rpm-bar" class="rpm-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Minimap (Bottom Right) -->
+        <div class="minimap-container">
+            <canvas id="minimap-canvas" width="180" height="180"></canvas>
+            <div class="minimap-label">LIVE ROAD MAP</div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast hidden">
+            <span id="toast-message">Welcome! Press C to Accelerate & Z to Brake. Road builds automatically!</span>
+        </div>
+    </div>
+
+    <!-- Settings / Customization Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>CAR & ROAD CUSTOMIZATION</h2>
+                <button id="modal-close" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Car Paint Section -->
+                <div class="setting-group">
+                    <label>CAR PAINT COLOR</label>
+                    <div class="color-options">
+                        <button class="color-dot active" data-color="#e74c3c" style="background: #e74c3c;"></button>
+                        <button class="color-dot" data-color="#3498db" style="background: #3498db;"></button>
+                        <button class="color-dot" data-color="#2ecc71" style="background: #2ecc71;"></button>
+                        <button class="color-dot" data-color="#f1c40f" style="background: #f1c40f;"></button>
+                        <button class="color-dot" data-color="#9b59b6" style="background: #9b59b6;"></button>
+                        <button class="color-dot" data-color="#1abc9c" style="background: #1abc9c;"></button>
+                        <button class="color-dot" data-color="#ecf0f1" style="background: #ecf0f1;"></button>
+                        <button class="color-dot" data-color="#2c3e50" style="background: #2c3e50;"></button>
+                    </div>
+                </div>
+
+                <!-- Underglow Neon -->
+                <div class="setting-group">
+                    <label>UNDERGLOW NEON</label>
+                    <div class="color-options" id="underglow-options">
+                        <button class="color-dot active" data-neon="#00f3ff" style="background: #00f3ff;"></button>
+                        <button class="color-dot" data-neon="#ff0055" style="background: #ff0055;"></button>
+                        <button class="color-dot" data-neon="#00ff66" style="background: #00ff66;"></button>
+                        <button class="color-dot" data-neon="#ffcc00" style="background: #ffcc00;"></button>
+                        <button class="color-dot" data-neon="#off" style="background: #333;">OFF</button>
+                    </div>
+                </div>
+
+                <!-- Road Texture Style -->
+                <div class="setting-group">
+                    <label>ROAD STYLE</label>
+                    <div class="style-selector">
+                        <button class="btn btn-select active" data-roadstyle="asphalt">Classic Asphalt</button>
+                        <button class="btn btn-select" data-roadstyle="cyber">Cyber Neon</button>
+                        <button class="btn btn-select" data-roadstyle="gold">Gold Highway</button>
+                        <button class="btn btn-select" data-roadstyle="rainbow">Rainbow Ridge</button>
+                    </div>
+                </div>
+
+                <!-- Environment Theme -->
+                <div class="setting-group">
+                    <label>ENVIRONMENT THEME</label>
+                    <div class="style-selector">
+                        <button class="btn btn-select active" data-envtheme="day">Sunlit Valley</button>
+                        <button class="btn btn-select" data-envtheme="sunset">Sunset Dunes</button>
+                        <button class="btn btn-select" data-envtheme="night">Cyber Night</button>
+                    </div>
+                </div>
+
+                <!-- Road Decorations -->
+                <div class="setting-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chk-streetlights" checked>
+                        <span>Spawn Streetlights along road</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chk-guardrails" checked>
+                        <span>Spawn Guardrails along curves</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main JavaScript ES Modules -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
