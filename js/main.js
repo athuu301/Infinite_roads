@@ -95,7 +95,7 @@ class GameApp {
     }
 
     bindEvents() {
-        // Keydown & Keyup Handlers
+        // Keydown & Keyup Handlers (Desktop Keyboard)
         window.addEventListener('keydown', (e) => {
             // First user interaction initializes Web Audio API
             this.soundManager.init();
@@ -120,11 +120,77 @@ class GameApp {
             this.keys[e.code] = false;
         });
 
-        // Window Resize
-        window.addEventListener('resize', () => {
+        // Touch Controls Multi-touch Pointer Events (Mobile / Tablet)
+        const touchButtons = [
+            { id: 'btn-touch-left', key: 'KeyA' },
+            { id: 'btn-touch-right', key: 'KeyD' },
+            { id: 'btn-touch-accel', key: 'KeyC' },
+            { id: 'btn-touch-brake', key: 'KeyZ' },
+            { id: 'btn-touch-handbrake', key: 'Space' }
+        ];
+
+        touchButtons.forEach(({ id, key }) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+
+            const handlePress = (e) => {
+                if (e.cancelable) e.preventDefault();
+                this.soundManager.init();
+                this.keys[key] = true;
+                btn.classList.add('active');
+            };
+
+            const handleRelease = (e) => {
+                if (e.cancelable) e.preventDefault();
+                this.keys[key] = false;
+                btn.classList.remove('active');
+            };
+
+            btn.addEventListener('pointerdown', handlePress, { passive: false });
+            btn.addEventListener('pointerup', handleRelease, { passive: false });
+            btn.addEventListener('pointerleave', handleRelease, { passive: false });
+            btn.addEventListener('pointercancel', handleRelease, { passive: false });
+
+            btn.addEventListener('touchstart', handlePress, { passive: false });
+            btn.addEventListener('touchend', handleRelease, { passive: false });
+            btn.addEventListener('touchcancel', handleRelease, { passive: false });
+        });
+
+        // Touch Utility Actions (Camera & Respawn buttons)
+        const btnTouchCam = document.getElementById('btn-touch-cam');
+        if (btnTouchCam) {
+            const cycleCam = (e) => {
+                if (e.cancelable) e.preventDefault();
+                this.soundManager.init();
+                this.cameraMode = (this.cameraMode + 1) % 3;
+                const camNames = ["CHASE CAM", "HOOD CAM", "OVERHEAD CAM"];
+                this.hud.showToast(`Camera: ${camNames[this.cameraMode]}`, 2000);
+            };
+            btnTouchCam.addEventListener('pointerdown', cycleCam, { passive: false });
+            btnTouchCam.addEventListener('touchstart', cycleCam, { passive: false });
+        }
+
+        const btnTouchRespawn = document.getElementById('btn-touch-respawn');
+        if (btnTouchRespawn) {
+            const doRespawn = (e) => {
+                if (e.cancelable) e.preventDefault();
+                this.soundManager.init();
+                this.car.reset();
+                this.hud.showToast("Car Respawned to Origin", 2000);
+            };
+            btnTouchRespawn.addEventListener('pointerdown', doRespawn, { passive: false });
+            btnTouchRespawn.addEventListener('touchstart', doRespawn, { passive: false });
+        }
+
+        // Window Resize & Device Orientation Change
+        const handleResize = () => {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(handleResize, 150);
         });
     }
 

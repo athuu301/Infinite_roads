@@ -28,6 +28,15 @@ export class HUDManager {
             'KeyZ': document.getElementById('key-z')
         };
 
+        // Touch control elements mapping
+        this.touchElements = {
+            'KeyA': document.getElementById('btn-touch-left'),
+            'KeyD': document.getElementById('btn-touch-right'),
+            'KeyC': document.getElementById('btn-touch-accel'),
+            'KeyZ': document.getElementById('btn-touch-brake'),
+            'Space': document.getElementById('btn-touch-handbrake')
+        };
+
         // Minimap Canvas
         this.minimapCanvas = document.getElementById('minimap-canvas');
         this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null;
@@ -69,6 +78,26 @@ export class HUDManager {
                     el.classList.add('active');
                 } else {
                     el.classList.remove('active');
+                }
+            }
+        }
+
+        // Highlight touch control buttons
+        const touchMappings = {
+            'KeyA': keys['KeyA'] || keys['ArrowLeft'],
+            'KeyD': keys['KeyD'] || keys['ArrowRight'],
+            'KeyC': keys['KeyC'] || keys['KeyW'] || keys['ArrowUp'],
+            'KeyZ': keys['KeyZ'] || keys['KeyS'] || keys['ArrowDown'],
+            'Space': keys['Space']
+        };
+
+        for (const [code, isPressed] of Object.entries(touchMappings)) {
+            const touchBtn = this.touchElements[code];
+            if (touchBtn) {
+                if (isPressed) {
+                    touchBtn.classList.add('active');
+                } else {
+                    touchBtn.classList.remove('active');
                 }
             }
         }

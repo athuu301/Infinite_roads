@@ -21,12 +21,15 @@
     padding: 0;
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    touch-action: none;
     background-color: var(--bg-dark);
     font-family: var(--font-body);
     color: #ffffff;
@@ -40,6 +43,7 @@ body, html {
     top: 0;
     left: 0;
     z-index: 1;
+    touch-action: none;
 }
 
 /* HUD Overlay Layer */
@@ -55,10 +59,11 @@ body, html {
     flex-direction: column;
     justify-content: space-between;
     padding: 20px;
+    touch-action: none;
 }
 
 /* Enable pointer events for interactive elements */
-header, .controls-overlay, .dashboard-panel, .minimap-container, .modal {
+header, .controls-overlay, .dashboard-panel, .minimap-container, .modal, .touch-overlay {
     pointer-events: auto;
 }
 
@@ -634,3 +639,400 @@ header, .controls-overlay, .dashboard-panel, .minimap-container, .modal {
     width: 16px;
     height: 16px;
 }
+
+/* ==========================================================================
+   TOUCH CONTROLS & RESPONSIVE DESIGN (TABLETS & PHONES)
+   ========================================================================== */
+
+/* Default Touch Overlay setup */
+.touch-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 25;
+    display: none; /* Auto-enabled via JS or Media Queries */
+}
+
+/* Force show touch overlay on touch devices or small screens */
+@media (hover: none) and (pointer: coarse), (max-width: 1024px) {
+    .touch-overlay {
+        display: block;
+    }
+    
+    /* Hide keyboard guide on mobile/touch devices */
+    .controls-overlay {
+        display: none !important;
+    }
+}
+
+.touch-top-actions {
+    position: absolute;
+    top: 85px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.touch-cluster {
+    position: absolute;
+    bottom: 24px;
+    pointer-events: auto;
+    display: flex;
+    gap: 12px;
+}
+
+.touch-steer-cluster {
+    left: 20px;
+    align-items: center;
+}
+
+.touch-pedal-cluster {
+    right: 20px;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.pedal-row {
+    display: flex;
+    gap: 12px;
+}
+
+.touch-btn {
+    background: var(--glass-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 2px solid var(--glass-border);
+    border-radius: 18px;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--glass-shadow);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.touch-btn-dir {
+    width: 68px;
+    height: 68px;
+    font-size: 1.6rem;
+    border-color: rgba(0, 243, 255, 0.4);
+}
+
+.touch-btn-dir.active, .touch-btn-dir:active {
+    background: var(--accent-cyan);
+    color: #000;
+    border-color: #fff;
+    box-shadow: 0 0 20px var(--accent-cyan);
+    transform: scale(0.92);
+}
+
+.touch-btn-accel {
+    width: 76px;
+    height: 76px;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    border-color: rgba(0, 255, 136, 0.5);
+    background: rgba(0, 255, 136, 0.15);
+}
+
+.touch-btn-accel.active, .touch-btn-accel:active {
+    background: var(--accent-green);
+    color: #000;
+    border-color: #fff;
+    box-shadow: 0 0 24px var(--accent-green);
+    transform: scale(0.92);
+}
+
+.touch-btn-brake {
+    width: 76px;
+    height: 76px;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border-color: rgba(255, 2, 102, 0.5);
+    background: rgba(255, 2, 102, 0.15);
+}
+
+.touch-btn-brake.active, .touch-btn-brake:active {
+    background: var(--accent-magenta);
+    color: #fff;
+    border-color: #fff;
+    box-shadow: 0 0 24px var(--accent-magenta);
+    transform: scale(0.92);
+}
+
+.touch-btn-drift {
+    width: 164px;
+    height: 38px;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    border-color: rgba(255, 204, 0, 0.4);
+}
+
+.touch-btn-drift.active, .touch-btn-drift:active {
+    background: var(--accent-gold);
+    color: #000;
+    box-shadow: 0 0 18px var(--accent-gold);
+    transform: scale(0.95);
+}
+
+.touch-btn-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+}
+
+.touch-btn-icon:active {
+    transform: scale(0.9);
+    background: rgba(0, 243, 255, 0.3);
+}
+
+/* Compact Button Utilities */
+.btn-compact {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   MEDIA QUERIES - TABLET & PHONE BREAKPOINTS
+   ========================================================================== */
+
+/* Tablets & Small Laptops (under 1024px) */
+@media (max-width: 1024px) {
+    #hud {
+        padding: 14px;
+    }
+
+    .hud-header {
+        padding: 10px 16px;
+        gap: 12px;
+    }
+
+    .logo-text h1 {
+        font-size: 1.15rem;
+    }
+
+    .logo-text .subtitle {
+        font-size: 0.65rem;
+    }
+
+    .stats-bar {
+        gap: 14px;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+    }
+
+    .dashboard-panel {
+        bottom: 20px;
+        left: 50%;
+        padding: 10px 18px;
+        gap: 14px;
+    }
+
+    .speedometer-container {
+        width: 110px;
+        height: 110px;
+    }
+
+    #speed-value {
+        font-size: 1.7rem;
+    }
+
+    .rpm-container {
+        width: 120px;
+    }
+}
+
+/* Medium Phones & Tablets (under 768px) */
+@media (max-width: 768px) {
+    .hud-header {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .brand {
+        gap: 8px;
+    }
+
+    .logo-icon {
+        font-size: 1.6rem;
+    }
+
+    .logo-text h1 {
+        font-size: 1.0rem;
+    }
+
+    .logo-text .subtitle {
+        display: none;
+    }
+
+    .stats-bar {
+        order: 3;
+        width: 100%;
+        justify-content: space-around;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 6px;
+        margin-top: 4px;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .icon-btn {
+        padding: 6px 10px;
+        font-size: 1.0rem;
+    }
+
+    .dashboard-panel {
+        bottom: 110px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 14px;
+    }
+
+    .minimap-container {
+        bottom: 115px;
+        right: 14px;
+        padding: 6px;
+    }
+
+    #minimap-canvas {
+        width: 110px;
+        height: 110px;
+    }
+
+    .minimap-label {
+        font-size: 0.55rem;
+    }
+
+    .touch-top-actions {
+        top: 125px;
+        right: 14px;
+    }
+
+    .touch-btn-dir {
+        width: 62px;
+        height: 62px;
+        font-size: 1.4rem;
+    }
+
+    .touch-btn-accel, .touch-btn-brake {
+        width: 68px;
+        height: 68px;
+        font-size: 0.75rem;
+    }
+
+    .touch-btn-drift {
+        width: 148px;
+        height: 34px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Small Phones (under 520px) */
+@media (max-width: 520px) {
+    .stat-card-hide-mobile {
+        display: none !important;
+    }
+
+    .stat-label {
+        font-size: 0.6rem;
+    }
+
+    .stat-value {
+        font-size: 0.95rem;
+    }
+
+    .dashboard-panel {
+        bottom: 115px;
+        gap: 8px;
+        padding: 6px 10px;
+    }
+
+    .speedometer-container {
+        width: 90px;
+        height: 90px;
+    }
+
+    #speed-value {
+        font-size: 1.4rem;
+    }
+
+    .rpm-container {
+        width: 90px;
+    }
+
+    .rpm-label {
+        font-size: 0.65rem;
+    }
+
+    .minimap-container {
+        top: 125px;
+        bottom: auto;
+        right: 14px;
+    }
+
+    #minimap-canvas {
+        width: 90px;
+        height: 90px;
+    }
+
+    .touch-top-actions {
+        top: 125px;
+        left: 14px;
+        right: auto;
+    }
+
+    .touch-steer-cluster {
+        left: 10px;
+        bottom: 16px;
+        gap: 8px;
+    }
+
+    .touch-pedal-cluster {
+        right: 10px;
+        bottom: 16px;
+        gap: 8px;
+    }
+
+    .pedal-row {
+        gap: 8px;
+    }
+
+    .touch-btn-dir {
+        width: 56px;
+        height: 56px;
+        font-size: 1.3rem;
+    }
+
+    .touch-btn-accel, .touch-btn-brake {
+        width: 62px;
+        height: 62px;
+        font-size: 0.7rem;
+    }
+
+    .touch-btn-drift {
+        width: 132px;
+        height: 32px;
+        font-size: 0.7rem;
+    }
+
+    .glass-card {
+        padding: 18px;
+        width: 95%;
+    }
+}
+

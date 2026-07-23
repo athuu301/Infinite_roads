@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>VelocityCraft 3D - Infinite Road Builder & Supercar Simulator</title>
     <meta name="description" content="An open world 3D car driving game where a real-time procedural road builds wherever you drive. Powered by Three.js.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,7 +44,7 @@
                     <span class="stat-label">ROAD CREATED</span>
                     <span class="stat-value" id="stat-distance">0.0 <small>KM</small></span>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card stat-card-hide-mobile">
                     <span class="stat-label">ROAD NODES</span>
                     <span class="stat-value" id="stat-nodes">0</span>
                 </div>
@@ -57,12 +57,12 @@
             <div class="header-actions">
                 <button id="btn-theme" class="icon-btn" title="Toggle Day/Night/Cyber Theme">🌙</button>
                 <button id="btn-audio" class="icon-btn" title="Toggle Engine Audio & Synth Radio">🔊</button>
-                <button id="btn-clear-road" class="btn btn-secondary">Clear Road</button>
+                <button id="btn-clear-road" class="btn btn-secondary btn-compact">Clear Road</button>
                 <button id="btn-settings" class="icon-btn">⚙️</button>
             </div>
         </header>
 
-        <!-- Live Controls Visualizer (Left Floating) -->
+        <!-- Live Controls Visualizer (Left Floating - Desktop Keyboard) -->
         <div class="controls-overlay">
             <div class="controls-title">DRIVER CONTROLS</div>
             
@@ -93,6 +93,30 @@
                 <span>Space: Handbrake</span>
                 <span>R: Respawn Car</span>
                 <span>V: Camera View</span>
+            </div>
+        </div>
+
+        <!-- Touch Controls Overlay (Touch Screens / Mobile / Tablet) -->
+        <div id="touch-controls" class="touch-overlay">
+            <!-- Utility Quick Actions (Top Right below header) -->
+            <div class="touch-top-actions">
+                <button id="btn-touch-cam" class="touch-btn touch-btn-icon" title="Change Camera View">📹</button>
+                <button id="btn-touch-respawn" class="touch-btn touch-btn-icon" title="Respawn Car to Origin">🔄</button>
+            </div>
+
+            <!-- Left Steering Cluster -->
+            <div class="touch-cluster touch-steer-cluster">
+                <button id="btn-touch-left" class="touch-btn touch-btn-dir" data-key="KeyA">◀</button>
+                <button id="btn-touch-right" class="touch-btn touch-btn-dir" data-key="KeyD">▶</button>
+            </div>
+
+            <!-- Right Pedal Cluster -->
+            <div class="touch-cluster touch-pedal-cluster">
+                <button id="btn-touch-handbrake" class="touch-btn touch-btn-drift" data-key="Space">💨 DRIFT</button>
+                <div class="pedal-row">
+                    <button id="btn-touch-brake" class="touch-btn touch-btn-brake" data-key="KeyZ">🛑 BRAKE</button>
+                    <button id="btn-touch-accel" class="touch-btn touch-btn-accel" data-key="KeyC">⚡ ACCEL</button>
+                </div>
             </div>
         </div>
 
@@ -128,7 +152,7 @@
 
         <!-- Notification Toast -->
         <div id="toast" class="toast hidden">
-            <span id="toast-message">Welcome! Press C to Accelerate & Z to Brake. Road builds automatically!</span>
+            <span id="toast-message">Welcome! Drive to generate procedural roads!</span>
         </div>
     </div>
 
